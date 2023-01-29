@@ -32,7 +32,7 @@ func main() {
 		return
 	}
 	// respond
-	conn.Write([]byte("+PONG"))
+	conn.Write([]byte("+PONG\r\n"))
 	// close conn
 	conn.Close()
 }
