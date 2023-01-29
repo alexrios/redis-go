@@ -22,17 +22,20 @@ func main() {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
+	// close conn
+	defer conn.Close()
 
 	// store incoming data
-	buffer := make([]byte, 1024)
-	_, err = conn.Read(buffer)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-		return
+	for {
+		buffer := make([]byte, 1024)
+		_, err = conn.Read(buffer)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+			return
+		}
+		// respond
+		conn.Write([]byte("+PONG\r\n"))
 	}
-	// respond
-	conn.Write([]byte("+PONG\r\n"))
-	// close conn
-	conn.Close()
+
 }
