@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"os"
@@ -11,16 +12,22 @@ type Reponse struct {
 	conn net.Conn
 }
 
+func (r Reponse) isStringCmd() bool {
+	return bytes.HasPrefix(r.msg, []byte("+"))
+}
+
 func (r Reponse) StrMsg() string {
 	return string(r.msg)
 }
 
 func main() {
+	// Listen on port
 	l, err := net.Listen("tcp", "0.0.0.0:6379")
 	if err != nil {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
+	// Unbind port before the program exits
 	defer func(l net.Listener) {
 		if err := l.Close(); err != nil {
 			fmt.Println("Failed to close the tcp listener: %w", err)
@@ -28,7 +35,7 @@ func main() {
 		}
 	}(l)
 
-	conns := make(chan net.Conn)
+	conns := make(chan net.Conn, 1)
 	deadConns := make(chan net.Conn)
 	responses := make(chan Reponse)
 
@@ -73,11 +80,11 @@ func main() {
 		case r := <-responses:
 			// handle protocol messages
 			var wError error
-			switch r.StrMsg() {
-			case "PING":
+			switch {
+			case r.isStringCmd() && bytes.Equal(r.msg[1:], []byte("PING")):
 				_, wError = r.conn.Write([]byte("+PONG\r\n"))
 			default:
-				_, wError = r.conn.Write([]byte("+WTF\r\n"))
+				_, wError = r.conn.Write([]byte("-invalid data type\r\n"))
 			}
 			if wError != nil {
 				fmt.Println(wError)
