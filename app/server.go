@@ -1,8 +1,9 @@
 package main
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 )
@@ -26,34 +27,30 @@ func main() {
 	for {
 		var conn net.Conn
 		conn, err := l.Accept()
-		fmt.Println("send to conn channel")
-		go func() {
-			fmt.Println("new routine")
-			for {
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+		go handleConnection(conn)
+	}
+}
 
-				// store incoming data
-				buffer := make([]byte, 1024)
-				_, err = conn.Read(buffer)
-				if err != nil {
-					fmt.Println(err)
-					// notify the program that a connection is not available anymore.
-					conn.Close()
-					return
-				}
-				switch {
-				case bytes.Contains(buffer[1:], []byte("PING")):
-					fmt.Println("responding pong")
-					_, err = conn.Write([]byte("+PONG\r\n"))
-				case bytes.Contains(buffer, []byte("DOCS")):
-					fmt.Println("responding docs")
-					_, err = conn.Write([]byte("+welcome to redis\r\n"))
-				}
-				if err != nil {
-					conn.Close()
-					fmt.Println("Error: ", err.Error())
-					os.Exit(1)
-				}
+func handleConnection(conn net.Conn) {
+	defer conn.Close()
+
+	for {
+		buffer := make([]byte, 1024)
+		_, err := conn.Read(buffer)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
 			}
-		}()
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		_, err = conn.Write([]byte("+PONG\r\n"))
+		if err != nil {
+			fmt.Println("Error: ", err.Error())
+		}
 	}
 }
