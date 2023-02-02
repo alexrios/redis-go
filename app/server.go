@@ -91,9 +91,9 @@ func main() {
 			case bytes.Contains(r.msg[1:], []byte("PING")):
 				fmt.Println("responding pong")
 				_, wError = r.conn.Write([]byte("+PONG\r\n"))
-			default:
-				fmt.Println("responding error")
-				_, wError = r.conn.Write([]byte("-invalid data type\r\n"))
+				//default:
+				//	fmt.Println("responding error")
+				//	_, wError = r.conn.Write([]byte("-invalid data type\r\n"))
 			}
 			if wError != nil {
 				fmt.Println("dead from write")
