@@ -27,6 +27,7 @@ func main() {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
+	fmt.Println("lintening")
 	// Unbind port before the program exits
 	defer func(l net.Listener) {
 		if err := l.Close(); err != nil {
@@ -35,7 +36,7 @@ func main() {
 		}
 	}(l)
 
-	conns := make(chan net.Conn, 1)
+	conns := make(chan net.Conn)
 	deadConns := make(chan net.Conn)
 	responses := make(chan Reponse)
 
@@ -44,6 +45,7 @@ func main() {
 		for {
 			var conn net.Conn
 			conn, err := l.Accept()
+			fmt.Println("send to conn channel")
 			conns <- conn
 
 			if err != nil {
@@ -60,37 +62,46 @@ func main() {
 		// brand new connecion
 		case conn := <-conns:
 			// new routine for a new connection
+			fmt.Println("conns")
 			go func() {
+				fmt.Println("new routine")
 				// store incoming data
 				buffer := make([]byte, 1024)
 				_, err = conn.Read(buffer)
 				if err != nil {
 					fmt.Println(err)
 					// notify the program that a connection is not available anymore.
+					fmt.Println("dead from read")
 					deadConns <- conn
 					return
 				}
+				fmt.Println("send to responses channel")
 				responses <- Reponse{
 					msg:  buffer,
 					conn: conn,
 				}
 			}()
 		case dc := <-deadConns:
+			fmt.Println("closing conn")
 			_ = dc.Close()
 		case r := <-responses:
 			// handle protocol messages
 			var wError error
 			switch {
-			case r.isStringCmd() && bytes.Equal(r.msg[1:], []byte("PING")):
+			case bytes.Contains(r.msg[1:], []byte("PING")):
+				fmt.Println("responding pong")
 				_, wError = r.conn.Write([]byte("+PONG\r\n"))
 			default:
+				fmt.Println("responding error")
 				_, wError = r.conn.Write([]byte("-invalid data type\r\n"))
 			}
 			if wError != nil {
+				fmt.Println("dead from write")
 				fmt.Println(wError)
 				// notify the program that a connection is not available anymore.
 				deadConns <- r.conn
 			}
+			r.conn.Close()
 
 		}
 	}
