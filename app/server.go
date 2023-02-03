@@ -25,7 +25,7 @@ func main() {
 	}(l)
 
 	for {
-		
+
 		var conn net.Conn
 		conn, err := l.Accept()
 		if err != nil {
