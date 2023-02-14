@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"os"
+	"strconv"
 )
 
 func main() {
@@ -49,6 +51,31 @@ func handleConnection(conn net.Conn) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+
+		// commands
+		tokens := bytes.Split(buffer, []byte("\r\n"))
+		if tokens[0][0] == byte('*') {
+			// should be a better way to do this
+			cmdLen, err := strconv.Atoi(string(tokens[0][1]))
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fmt.Println(cmdLen)
+
+			cmd := string(tokens[2])
+			value := string(tokens[4])
+
+			if cmd == "ECHO" {
+				resp := fmt.Sprintf("+%s\r\n", value)
+				_, err = conn.Write([]byte(resp))
+				if err != nil {
+					fmt.Println("Error: ", err.Error())
+				}
+				return
+			}
+		}
+
 		_, err = conn.Write([]byte("+PONG\r\n"))
 		if err != nil {
 			fmt.Println("Error: ", err.Error())
