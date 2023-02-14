@@ -56,7 +56,7 @@ func handleConnection(conn net.Conn) {
 		// commands
 		cmd, values := Decode(buffer)
 
-		switch cmd {
+		switch strings.ToUpper(cmd) {
 		case "ECHO":
 			resp := fmt.Sprintf("+%s\r\n", strings.Join(values, " "))
 			_, err = conn.Write([]byte(resp))
