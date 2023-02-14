@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -53,27 +54,15 @@ func handleConnection(conn net.Conn) {
 		}
 
 		// commands
-		tokens := bytes.Split(buffer, []byte("\r\n"))
-		if tokens[0][0] == byte('*') {
-			// should be a better way to do this
-			cmdLen, err := strconv.Atoi(string(tokens[0][1]))
+		cmd, values := Decode(buffer)
+
+		if cmd == "ECHO" {
+			resp := fmt.Sprintf("+%s\r\n", strings.Join(values, " "))
+			_, err = conn.Write([]byte(resp))
 			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
+				fmt.Println("Error: ", err.Error())
 			}
-			fmt.Println(cmdLen)
-
-			cmd := string(tokens[2])
-			value := string(tokens[4])
-
-			if cmd == "ECHO" {
-				resp := fmt.Sprintf("+%s\r\n", value)
-				_, err = conn.Write([]byte(resp))
-				if err != nil {
-					fmt.Println("Error: ", err.Error())
-				}
-				return
-			}
+			return
 		}
 
 		_, err = conn.Write([]byte("+PONG\r\n"))
@@ -81,4 +70,25 @@ func handleConnection(conn net.Conn) {
 			fmt.Println("Error: ", err.Error())
 		}
 	}
+}
+
+func Decode(buffer []byte) (string, []string) {
+	tokens := bytes.Split(buffer, []byte("\r\n"))
+
+	header := tokens[0]
+	typpe := header[0]
+	typeLen, err := strconv.Atoi(string(header[1]))
+	if err != nil {
+		fmt.Println(err)
+	}
+	cmd := string(tokens[2])
+	if typpe == byte('*') {
+		values := make([]string, 0)
+		paramsLen := typeLen - 1
+		for i := 0; i <= paramsLen; i = i + 2 {
+			values = append(values, string(tokens[4+i]))
+		}
+		return cmd, values
+	}
+	return "", nil
 }
