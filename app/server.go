@@ -56,16 +56,15 @@ func handleConnection(conn net.Conn) {
 		// commands
 		cmd, values := Decode(buffer)
 
-		if cmd == "ECHO" {
+		switch cmd {
+		case "ECHO":
 			resp := fmt.Sprintf("+%s\r\n", strings.Join(values, " "))
 			_, err = conn.Write([]byte(resp))
-			if err != nil {
-				fmt.Println("Error: ", err.Error())
-			}
-			return
+		case "PING":
+			_, err = conn.Write([]byte("+PONG\r\n"))
+		default:
+			_, err = conn.Write([]byte("+LOL\r\n"))
 		}
-
-		_, err = conn.Write([]byte("+PONG\r\n"))
 		if err != nil {
 			fmt.Println("Error: ", err.Error())
 		}
@@ -85,8 +84,13 @@ func Decode(buffer []byte) (string, []string) {
 	if typpe == byte('*') {
 		values := make([]string, 0)
 		paramsLen := typeLen - 1
-		for i := 0; i <= paramsLen; i = i + 2 {
-			values = append(values, string(tokens[4+i]))
+		if paramsLen == 0 {
+			return cmd, nil
+		}
+		paramsIndex := 4
+		for i := 0; i < paramsLen; i++ {
+			paramValuePos := paramsIndex + i*2
+			values = append(values, string(tokens[paramValuePos]))
 		}
 		return cmd, values
 	}
