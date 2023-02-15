@@ -9,7 +9,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
+
+var _map = sync.Map{}
 
 func main() {
 	// Listen on port
@@ -56,19 +59,58 @@ func handleConnection(conn net.Conn) {
 		// commands
 		cmd, values := Decode(buffer)
 
+	CommandSwitch:
 		switch strings.ToUpper(cmd) {
 		case "ECHO":
 			resp := fmt.Sprintf("+%s\r\n", strings.Join(values, " "))
 			_, err = conn.Write([]byte(resp))
 		case "PING":
 			_, err = conn.Write([]byte("+PONG\r\n"))
+		case "SET":
+			err = setVar(values)
+			if err != nil {
+				break CommandSwitch
+			}
+			_, err = conn.Write([]byte("+OK\r\n"))
+		case "GET":
+			v, err := getVar(values)
+			if err != nil {
+				break CommandSwitch
+			}
+			_, err = conn.Write([]byte(fmt.Sprintf("+%s\r\n", v)))
 		default:
-			_, err = conn.Write([]byte("+LOL\r\n"))
+			_, err = conn.Write([]byte(fmt.Sprintf("-%s is not a valid command\r\n", cmd)))
 		}
+
 		if err != nil {
-			fmt.Println("Error: ", err.Error())
+			_, err = conn.Write([]byte(fmt.Sprintf("-%s\r\n", err.Error())))
 		}
 	}
+}
+
+func getVar(values []string) (string, error) {
+	if len(values) < 1 {
+		return "", errors.New("no values to be get")
+	}
+	rawV, ok := _map.Load(values[0])
+	if !ok {
+		return "", errors.New("key not found")
+	}
+	v, ok := rawV.(string)
+	if !ok {
+		return "", errors.New("key not a string")
+	}
+	return v, nil
+}
+
+func setVar(values []string) error {
+	if len(values) < 2 {
+		return errors.New("no values to be set")
+	}
+
+	_map.Store(values[0], values[1])
+
+	return nil
 }
 
 func Decode(buffer []byte) (string, []string) {
