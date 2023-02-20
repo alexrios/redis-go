@@ -120,6 +120,7 @@ func Decode(buffer []byte, cache *Cache) (Command, error) {
 				if err != nil {
 					return nil, err
 				}
+				fmt.Printf("found %d\n", millis)
 				exp = time.Now().UnixMilli() + int64(millis)
 			}
 		}
