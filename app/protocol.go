@@ -137,6 +137,7 @@ func Decode(buffer []byte, cache *Cache) (Command, error) {
 
 		err = getCmd.Get(cache)
 		if err != nil {
+			fmt.Println("key expired?", errors.Is(err, KeyExpired))
 			if errors.Is(err, KeyExpired) {
 				getCmd.expired = true
 				fmt.Printf("%v\n", getCmd)
