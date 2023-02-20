@@ -48,6 +48,7 @@ func (e SetCmd) Set(cache *Cache) error {
 		val: e.params[1],
 		exp: e.expiration,
 	}
+	fmt.Printf("seetting %v\n", e)
 	err := cache.Store(k, v)
 	if err != nil {
 		return err
