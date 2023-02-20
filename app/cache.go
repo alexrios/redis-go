@@ -27,6 +27,7 @@ func (c *Cache) Load(k string) (string, error) {
 	if !ok {
 		return "", errors.New("key not found")
 	}
+	fmt.Println(v.exp, time.Now().UnixMilli())
 	if v.exp > 0 && time.Now().UnixMilli() > v.exp {
 		delete(c.v, k)
 		fmt.Println("returning key expired error")
