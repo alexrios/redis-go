@@ -62,7 +62,7 @@ type GetCmd struct {
 	expired bool
 }
 
-func (e GetCmd) Response() string {
+func (e *GetCmd) Response() string {
 	if e.expired {
 		return NullBulkStr
 	}
@@ -136,6 +136,7 @@ func Decode(buffer []byte, cache *Cache) (Command, error) {
 		getCmd := &GetCmd{params: values}
 
 		err = getCmd.Get(cache)
+		fmt.Println("get errors?", err != nil)
 		if err != nil {
 			fmt.Println("key expired?", errors.Is(err, KeyExpired))
 			if errors.Is(err, KeyExpired) {
