@@ -64,7 +64,6 @@ type GetCmd struct {
 
 func (e GetCmd) Response() string {
 	if e.expired {
-
 		return NullStr
 	}
 	return fmt.Sprintf("+%s\r\n", e.value)
