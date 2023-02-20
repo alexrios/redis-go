@@ -133,7 +133,7 @@ func Decode(buffer []byte, cache *Cache) (Command, error) {
 			return nil, errors.New("cannot GET with no parameters")
 		}
 		values := ParseValues(paramsLen, tokens)
-		getCmd := GetCmd{params: values}
+		getCmd := &GetCmd{params: values}
 
 		err = getCmd.Get(cache)
 		if err != nil {
