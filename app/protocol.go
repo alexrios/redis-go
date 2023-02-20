@@ -123,6 +123,7 @@ func Decode(buffer []byte, cache *Cache) (Command, error) {
 				exp = time.Now().UnixMilli() + int64(millis)
 			}
 		}
+		fmt.Printf("decoded PX as %d\n", exp)
 		setCmd := SetCmd{params: values, expiration: exp}
 		err = setCmd.Set(cache)
 		if err != nil {
