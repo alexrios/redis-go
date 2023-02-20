@@ -139,6 +139,7 @@ func Decode(buffer []byte, cache *Cache) (Command, error) {
 		if err != nil {
 			if errors.Is(err, KeyExpired) {
 				getCmd.expired = true
+				fmt.Printf("%v\n", getCmd)
 				return getCmd, nil
 			}
 			return nil, err
