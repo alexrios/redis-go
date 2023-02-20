@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -28,6 +29,7 @@ func (c *Cache) Load(k string) (string, error) {
 	}
 	if v.exp > 0 && time.Now().UnixMilli() > v.exp {
 		delete(c.v, k)
+		fmt.Println("returning key expired error")
 		return "", KeyExpired
 	}
 	return v.val, nil
