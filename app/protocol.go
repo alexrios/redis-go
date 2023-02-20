@@ -115,7 +115,7 @@ func Decode(buffer []byte, cache *Cache) (Command, error) {
 		var exp int64 = 0
 		values := ParseValues(paramsLen, tokens)
 		for i := range values {
-			if values[i] == "PX" && len(values) >= i+1 {
+			if strings.ToUpper(values[i]) == "PX" && len(values) >= i+1 {
 				millis, err := strconv.Atoi(values[i+1])
 				if err != nil {
 					return nil, err
