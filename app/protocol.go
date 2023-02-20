@@ -89,7 +89,7 @@ func Decode(buffer []byte, cache *Cache) (Command, error) {
 	}
 	msgLen, err := strconv.Atoi(string(header[1])) // how much extra tokens should be parsed
 	if err != nil {
-		return nil, errors.Join(InvalidRequest, err)
+		return nil, fmt.Errorf("%w: %s", InvalidRequest, err.Error())
 	}
 
 	// Create a new command with a given name
