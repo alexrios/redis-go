@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const NullStr = "$-1\r\n"
+
 type Command interface {
 	Response() string
 }
@@ -55,11 +57,16 @@ func (e SetCmd) Set(cache *Cache) error {
 }
 
 type GetCmd struct {
-	params []string
-	value  string
+	params  []string
+	value   string
+	expired bool
 }
 
 func (e GetCmd) Response() string {
+	if e.expired {
+
+		return NullStr
+	}
 	return fmt.Sprintf("+%s\r\n", e.value)
 }
 
@@ -130,6 +137,9 @@ func Decode(buffer []byte, cache *Cache) (Command, error) {
 		getCmd := GetCmd{params: values}
 
 		err = getCmd.Get(cache)
+		if errors.Is(err, KeyExpired) {
+			getCmd.expired = true
+		}
 		if err != nil {
 			return nil, err
 		}

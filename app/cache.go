@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+var KeyExpired = errors.New("key expired")
+
 type Value struct {
 	val string
 	exp int64
@@ -26,7 +28,7 @@ func (c *Cache) Load(k string) (string, error) {
 	}
 	if v.exp > 0 && time.Now().UnixMilli() > v.exp {
 		delete(c.v, k)
-		return "", errors.New("key expired")
+		return "", KeyExpired
 	}
 	return v.val, nil
 }
