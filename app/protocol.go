@@ -137,10 +137,11 @@ func Decode(buffer []byte, cache *Cache) (Command, error) {
 		getCmd := GetCmd{params: values}
 
 		err = getCmd.Get(cache)
-		if errors.Is(err, KeyExpired) {
-			getCmd.expired = true
-		}
 		if err != nil {
+			if errors.Is(err, KeyExpired) {
+				getCmd.expired = true
+				return getCmd, nil
+			}
 			return nil, err
 		}
 		return getCmd, nil
