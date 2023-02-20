@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const NullStr = "*-1\r\n"
+const NullBulkStr = "$-1\r\n"
 
 type Command interface {
 	Response() string
@@ -64,7 +64,8 @@ type GetCmd struct {
 
 func (e GetCmd) Response() string {
 	if e.expired {
-		return NullStr
+		e.value = ""
+		return NullBulkStr
 	}
 	return fmt.Sprintf("+%s\r\n", e.value)
 }
