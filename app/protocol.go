@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const NullStr = "$-1\r\n"
+const NullStr = "*-1\r\n"
 
 type Command interface {
 	Response() string
