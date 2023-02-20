@@ -65,5 +65,6 @@ func handleConnection(conn net.Conn, cache *Cache) {
 		if err != nil {
 			_, err = conn.Write(ErrorMsg(err))
 		}
+		fmt.Println(cmd.Response())
 	}
 }
